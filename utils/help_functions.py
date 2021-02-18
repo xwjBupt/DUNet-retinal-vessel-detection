@@ -1,6 +1,7 @@
 import h5py
 import numpy as np
 import keras.backend as K
+import pickle
 
 np.random.seed(1337)
 from PIL import Image
@@ -15,6 +16,18 @@ def write_hdf5(arr, outfile):
     with h5py.File(outfile, "w") as f:
         f.create_dataset("image", data=arr, dtype=arr.dtype)
 
+
+def read_pickle(inputfile):
+    f = open(inputfile, 'rb')
+    data = pickle.load(f, encoding='bytes')['data']
+    f.close()
+    return data
+
+def write_pickle(content, outfile):
+    f = open(outfile, 'wb')
+    data = {'data': content}
+    pickle.dump(data, f)
+    f.close()
 
 # convert RGB image in black and white
 def rgb2gray(rgb):
@@ -115,7 +128,6 @@ def pred_to_imgs(pred, patch_height, patch_width, mode="original"):
         exit()
     pred_images = np.reshape(pred_images, (pred_images.shape[0], 1, patch_height, patch_width))
     return pred_images
-
 
 
 def get_layer_outputs(test_image, model):

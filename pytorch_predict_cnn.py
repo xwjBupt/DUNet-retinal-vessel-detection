@@ -12,15 +12,15 @@ import time
 from glob import glob
 import torch
 from torch.utils.data import DataLoader
-from Data_loader import Retina_loader_infer
+from utils.Data_loader import Retina_loader_infer
 # ========= CONFIG FILE TO READ FROM =======
 import configparser
 import sys
 import argparse
 
 sys.path.insert(0, './utils/')
-from help_functions import *
-from extract_patches import get_data_testing_single_image
+from utils.help_functions import *
+from utils.extract_patches import get_data_testing_single_image
 
 parser = argparse.ArgumentParser(description="nasopharyngeal training")
 parser.add_argument('--mode', default='gpu', type=str, metavar='train on gpu or cpu',
@@ -83,7 +83,7 @@ model = MODELS[algorithm](n_channels=1, n_classes=2)
 weight_files = sorted(glob(join(TMP_DIR, 'checkpoint_epoch_*.pth')), reverse=True)
 # weight_files = []
 # weight_files.append(join(TMP_DIR, 'checkpoint_epoch_013.pth'))
-print("loaded:"+weight_files[0])
+print("loaded:" + weight_files[0])
 if mode == 'cpu':
     dtype_float = torch.FloatTensor
 else:

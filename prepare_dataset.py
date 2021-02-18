@@ -1,7 +1,8 @@
 import os
-import h5py
+# import h5py
 import numpy as np
-from pre_processing import get_fov_mask
+from utils.pre_processing import get_fov_mask
+import pickle
 
 np.random.seed(1337)
 from PIL import Image
@@ -13,29 +14,52 @@ dataset = config.get('data attributes', 'dataset')
 dataset_dict = ['STARE', 'CHASE']
 
 
-def write_hdf5(arr, outfile):
-    with h5py.File(outfile, "w") as f:
-        f.create_dataset("image", data=arr, dtype=arr.dtype)
+def write_pickle(content, outfile):
+    f = open(outfile, 'wb')
+    data = {'data': content}
+    pickle.dump(data, f)
+    f.close()
+
+
+def read_pickle(inputfile):
+    f = open(inputfile, 'rb')
+    data = pickle.load(f, encoding='bytes')
+    f.close()
+    return data
+
+
+# convert RGB image in black and white
+def rgb2gray(rgb):
+    assert (len(rgb.shape) == 4)  # 4D arrays
+    assert (rgb.shape[1] == 3)
+    bn_imgs = rgb[:, 0, :, :] * 0.299 + rgb[:, 1, :, :] * 0.587 + rgb[:, 2, :, :] * 0.114
+    bn_imgs = np.reshape(bn_imgs, (rgb.shape[0], 1, rgb.shape[2], rgb.shape[3]))
+    return bn_imgs
+
+
+# def write_hdf5(arr, outfile):
+#     with h5py.File(outfile, "w") as f:
+#         f.create_dataset("image", data=arr, dtype=arr.dtype)
 
 
 # train
-original_imgs_train = "./" + dataset + "/training/images/"
-groundTruth_imgs_train = "./" + dataset + "/training/1st_manual/"
-borderMasks_imgs_train = "./" + dataset + "/training/mask/"
+original_imgs_train = "D:\\Vessel\\DRIVE\\raw\\" + "training\\images\\"
+groundTruth_imgs_train = "D:\\Vessel\\DRIVE\\raw\\" + "training\\1st_manual\\"
+borderMasks_imgs_train = "D:\\Vessel\\DRIVE\\raw\\" + "training\\mask\\"
 # test
-original_imgs_test = "./" + dataset + "/test/images/"
-groundTruth_imgs_test = "./" + dataset + "/test/1st_manual/"
-borderMasks_imgs_test = "./" + dataset + "/test/mask/"
+original_imgs_test = "D:\\Vessel\\DRIVE\\raw\\" + "test\\images\\"
+groundTruth_imgs_test = "D:\\Vessel\\DRIVE\\raw\\" + "test\\1st_manual\\"
+borderMasks_imgs_test = "D:\\Vessel\\DRIVE\\raw\\" + "test\\mask\\"
 
 Nimgs = 0
 channels = int(config.get('data attributes', 'channels'))
 height = 0
 width = 0
 
-dataset_path = "./" + dataset + "_datasets_training_testing/"
+dataset_path = "D:\\Vessel\\DRIVE\\raw\\processed_DUNet\\" + "datasets_training_testing\\"
 
 
-def get_datasets(imgs_dir, groundTruth_dir, borderMasks_dir, train_test="null"):
+def get_datasets(imgs_dir, groundTruth_dir, borderMasks_dir, train_test="train"):
     # for path, subdirs, files in os.walk(imgs_dir):  # list all files, directories in the path
     files = os.listdir(imgs_dir)
     assert len(files) > 0
@@ -118,13 +142,14 @@ def get_datasets(imgs_dir, groundTruth_dir, borderMasks_dir, train_test="null"):
 
 if not os.path.exists(dataset_path):
     os.makedirs(dataset_path)
-# imgs_train, groundTruth_train, border_masks_train = get_datasets(original_imgs_train, groundTruth_imgs_train, borderMasks_imgs_train)
-# write_hdf5(imgs_train, dataset_path + dataset + "_imgs_train.hdf5")
-# write_hdf5(groundTruth_train, dataset_path + dataset + "_groundTruth_train.hdf5")
-# write_hdf5(border_masks_train, dataset_path + dataset + "_borderMasks_train.hdf5")
+imgs_train, groundTruth_train, border_masks_train = get_datasets(original_imgs_train, groundTruth_imgs_train,
+                                                                 borderMasks_imgs_train)
+write_pickle(imgs_train, dataset_path + dataset + "_imgs_train.pkl")
+write_pickle(groundTruth_train, dataset_path + dataset + "_groundTruth_train.pkl")
+write_pickle(border_masks_train, dataset_path + dataset + "_borderMasks_train.pkl")
 
 imgs_test, groundTruth_test, border_masks_test = get_datasets(original_imgs_test, groundTruth_imgs_test,
                                                               borderMasks_imgs_test, "test")
-write_hdf5(imgs_test, dataset_path + dataset + "_imgs_test.hdf5")
-write_hdf5(groundTruth_test, dataset_path + dataset + "_groundTruth_test.hdf5")
-write_hdf5(border_masks_test, dataset_path + dataset + "_borderMasks_test.hdf5")
+write_pickle(imgs_test, dataset_path + dataset + "_imgs_test.pkl")
+write_pickle(groundTruth_test, dataset_path + dataset + "_groundTruth_test.pkl")
+write_pickle(border_masks_test, dataset_path + dataset + "_borderMasks_test.pkl")

@@ -4,17 +4,20 @@ from os.path import isdir, join
 from os import makedirs
 from utils.Data_loader import Retina_loader_infer
 from torch.utils.data import DataLoader
+from alive_progress import alive_bar
+
 import os
 
 sys.path.insert(0, './utils/')
 from models import MODELS
 # help_functions.py
-from help_functions import *
-from extract_patches import recompone
-from extract_patches import recompone_overlap
-from extract_patches import kill_border
-from extract_patches import get_data_testing, get_data_testing_overlap
-from pre_processing import my_PreProc
+from tqdm import tqdm
+from utils.help_functions import *
+from utils.extract_patches import recompone
+from utils.extract_patches import recompone_overlap
+from utils.extract_patches import kill_border
+from utils.extract_patches import get_data_testing, get_data_testing_overlap
+from utils.pre_processing import my_PreProc
 import time
 from glob import glob
 import torch
@@ -23,7 +26,7 @@ import configparser
 import argparse
 
 parser = argparse.ArgumentParser(description="nasopharyngeal training")
-parser.add_argument('--mode', default='gpu', type=str, metavar='train on gpu or cpu',
+parser.add_argument('--mode', default='cpu', type=str, metavar='train on gpu or cpu',
                     help='train on gpu or cpu(default gpu)')
 parser.add_argument('--gpu', default=0, type=int, help='gpu number')
 args = parser.parse_args()
@@ -40,12 +43,12 @@ path_data = config.get('data paths', 'path_local')
 # original test images (for FOV selection)
 test_imgs_original = path_data + config.get('data paths', 'test_imgs_original')
 print("Test data:" + test_imgs_original)
-test_imgs_orig = load_hdf5(test_imgs_original)
+test_imgs_orig = read_pickle(test_imgs_original)
 full_img_height = test_imgs_orig.shape[2]
 full_img_width = test_imgs_orig.shape[3]
 # the border masks provided by the DRIVE
 test_border_masks = path_data + config.get('data paths', 'test_border_masks')
-test_border_masks = load_hdf5(test_border_masks)
+test_border_masks = read_pickle(test_border_masks)
 # dimension of the patches
 patch_height = int(config.get('data attributes', 'patch_height'))
 patch_width = int(config.get('data attributes', 'patch_width'))
@@ -133,16 +136,18 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size * 1, shuffle=False)
 start_time = time.time()
 predictions = []
 with torch.no_grad():
-    for i, (image) in enumerate(test_loader):
-        image = dtype_float(to_cuda(image.float(), mode)).requires_grad_(False)
-        pre_label = model(image)
-        pred_prob = pre_label.cpu().detach().numpy()
-        # visualize(group_images(image.cpu().detach().numpy(), 20), path_experiment + "all_testtest_" + str(i)+"_A")  # .show()
-        # visualize(group_images(pred_prob, 20),
-        #           path_experiment + "all_testtest_" + str(i)+"_B")  # .show()
-        # _, preds = torch.max(pre_label, dim=1)
-        # predictions.append(pred_prob.cpu().numpy())
-        predictions.append(pred_prob)
+    with alive_bar(len(test_loader)) as bar:
+        for i, (image) in enumerate(test_loader):
+            bar()
+            image = dtype_float(to_cuda(image.float(), mode)).requires_grad_(False)
+            pre_label = model(image)
+            pred_prob = pre_label.cpu().detach().numpy()
+            # visualize(group_images(image.cpu().detach().numpy(), 20), path_experiment + "all_testtest_" + str(i)+"_A")  # .show()
+            # visualize(group_images(pred_prob, 20),
+            #           path_experiment + "all_testtest_" + str(i)+"_B")  # .show()
+            # _, preds = torch.max(pre_label, dim=1)
+            # predictions.append(pred_prob.cpu().numpy())
+            predictions.append(pred_prob)
 end_time = time.time()
 print("predict time:" + str(end_time - start_time))
 # ===== Convert the prediction arrays in corresponding images
@@ -193,8 +198,10 @@ for i in range(int(N_predicted / group)):
         (orig_rgb_stripe, np.tile(orig_stripe, 3), np.tile(masks_stripe, 3), np.tile(pred_stripe, 3)), axis=0)
     visualize(total_img, path_experiment + name_experiment + "_RGB_Original_GroundTruth_Prediction" + str(i))  # .show()
 
-file = h5py.File(path_experiment + dataset + '_predict_results.h5', 'w')
-file.create_dataset('y_gt', data=gtruth_masks)
-file.create_dataset('y_pred', data=pred_imgs)
-file.create_dataset('x_origin', data=test_imgs_orig)
-file.close()
+content = {'y_gt': gtruth_masks, 'y_pred': pred_imgs, 'x_origin': test_imgs_orig}
+write_pickle(content, path_experiment + dataset + '_predict_results.pkl')
+# file = h5py.File(path_experiment + dataset + '_predict_results.h5', 'w')
+# file.create_dataset('y_gt', data=gtruth_masks)
+# file.create_dataset('y_pred', data=pred_imgs)
+# file.create_dataset('x_origin', data=test_imgs_orig)
+# file.close()

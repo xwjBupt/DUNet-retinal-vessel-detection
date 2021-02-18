@@ -4,8 +4,9 @@
 #
 ##################################################
 import cv2
-from utils.help_functions import *
+from utils.help_functions import rgb2gray
 from os import path
+import numpy as np
 from skimage import io, color, measure
 from scipy import ndimage, stats
 
@@ -60,7 +61,7 @@ def dataset_normalized(imgs):
     imgs_normalized = (imgs - imgs_mean) / imgs_std
     for i in range(imgs.shape[0]):
         imgs_normalized[i] = ((imgs_normalized[i] - np.min(imgs_normalized[i])) / (
-                    np.max(imgs_normalized[i]) - np.min(imgs_normalized[i]))) * 255
+                np.max(imgs_normalized[i]) - np.min(imgs_normalized[i]))) * 255
     return imgs_normalized
 
 

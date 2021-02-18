@@ -1,11 +1,11 @@
 [data paths]
-path_local =  ./DRIVE_datasets_training_testing/
-train_imgs_original = DRIVE_imgs_train.hdf5
-train_groundTruth = DRIVE_groundTruth_train.hdf5
-train_border_masks = DRIVE_borderMasks_train.hdf5
-test_imgs_original = DRIVE_imgs_test.hdf5
-test_groundTruth = DRIVE_groundTruth_test.hdf5
-test_border_masks = DRIVE_borderMasks_test.hdf5
+path_local = .//DRIVE_datasets_training_testing//
+train_imgs_original = DRIVE_imgs_train.pkl
+train_groundTruth = DRIVE_groundTruth_train.pkl
+train_border_masks = DRIVE_borderMasks_train.pkl
+test_imgs_original = DRIVE_imgs_test.pkl
+test_groundTruth = DRIVE_groundTruth_test.pkl
+test_border_masks = DRIVE_borderMasks_test.pkl
 model_path=./models/
 
 [experiment name]
@@ -14,29 +14,30 @@ name= deform_unet_v1
 
 [data attributes]
 #Dimensions of the patches extracted from the full images
-patch_height =48
-patch_width = 48
+patch_height =96
+patch_width = 96
 channels = 3
 
 dataset= DRIVE
 
 [training settings]
 #number of total patches:
-N_subimgs_positive = 100000
-N_subimgs_negative = 100000
-N_subimgs = 200000
+N_subimgs_positive = 16
+N_subimgs_negative = 16
+N_subimgs = 20
+
 #if patches are extracted only inside the field of view:
 inside_FOV = False
 #Number of training epochs
-N_epochs = 100
-batch_size = 60
+N_epochs = 10
+batch_size = 4
 
 [testing settings]
 N_group_visual = 1
 #Compute average in the prediction, improve results but require more patches to be predicted
 average_mode = True
 # stride_height=5 old version
-stride_height = 5
-stride_width = 5
+stride_height = 48
+stride_width = 48
 #if running with nohup
 nohup = False

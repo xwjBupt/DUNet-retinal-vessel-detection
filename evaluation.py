@@ -7,13 +7,14 @@ from sklearn.metrics import roc_curve
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_recall_curve
-from sklearn.metrics import jaccard_similarity_score
+# from sklearn.metrics import jaccard_similarity_score
+from sklearn.metrics import jaccard_score
 from sklearn.metrics import f1_score
 import sys
 
 sys.path.insert(0, './utils/')
-from help_functions import *
-from extract_patches import pred_only_FOV
+from utils.help_functions import *
+from utils.extract_patches import pred_only_FOV
 # ========= CONFIG FILE TO READ FROM =======
 import configparser
 
@@ -25,10 +26,10 @@ path_data = config.get('data paths', 'path_local')
 algorithm_config = config.get('experiment name', 'name')
 
 dataset = config.get('data attributes', 'dataset')
-name_experiment_list = ["deform_v1", "unet", "deform_unet_v1"]
+name_experiment_list = ["deform_unet_v1", "unet", "deform_unet_v1"]
 algorithms = ["Deformable-ConvNet", "U-Net", "DUNet"]
 test_border_masks = path_data + config.get('data paths', 'test_border_masks')
-test_border_masks = load_hdf5(test_border_masks)
+test_border_masks = read_pickle(test_border_masks)
 
 index = 0
 for name_experiment in name_experiment_list:
@@ -56,11 +57,11 @@ for name_experiment in name_experiment_list:
         file.close()
         gtruth_masks = np.where(gtruth_masks > 0, 1, 0)
     else:
-        file = h5py.File(path_experiment + dataset + '_predict_results.h5', 'r')
-        gtruth_masks = file['y_gt'][:]
-        pred_imgs = file['y_pred'][:]
-        orig_imgs = file['x_origin'][:]
-        file.close()
+        file = read_pickle(path_experiment + dataset + '_predict_results.pkl')
+        # file = h5py.File(path_experiment + dataset + '_predict_results.h5', 'r')
+        gtruth_masks = file['y_gt']
+        pred_imgs = file['y_pred']
+        orig_imgs = file['x_origin']
 
     # ====== Evaluate the results
     print("\n\n========  Evaluate the results =======================")
@@ -131,7 +132,9 @@ for name_experiment in name_experiment_list:
     print("Precision: " + str(precision))
 
     # Jaccard similarity index
-    jaccard_index = jaccard_similarity_score(y_true, y_pred, normalize=True)
+    # jaccard_index = jaccard_similarity_score(y_true, y_pred, normalize=True)
+    jaccard_index = jaccard_score(y_true, y_pred, average='binary')
+
     print("\nJaccard similarity score: " + str(jaccard_index))
 
     # F1 score

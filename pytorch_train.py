@@ -39,7 +39,7 @@ def str2bool(v):
 
 parser = argparse.ArgumentParser(description="nasopharyngeal training")
 
-parser.add_argument('--mode', default='gpu', type=str, metavar='train on gpu or cpu',
+parser.add_argument('--mode', default='cpu', type=str, metavar='train on gpu or cpu',
                     help='train on gpu or cpu(default gpu)')
 parser.add_argument('--gpu', default=0, type=int, help='gpu number')
 parser.add_argument('--optimizer', default='Adam',

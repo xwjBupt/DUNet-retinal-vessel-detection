@@ -1,9 +1,17 @@
 import numpy as np
+import pickle
 
 np.random.seed(1337)
 
 from utils.help_functions import load_hdf5, visualize, group_images
 from utils.pre_processing import my_PreProc
+
+
+def read_pickle(inputfile):
+    f = open(inputfile, 'rb')
+    data = pickle.load(f, encoding='bytes')['data']
+    f.close()
+    return data
 
 
 # from keras.preprocessing.image import array_to_img
@@ -78,8 +86,8 @@ def get_data_testing_overlap_ex(test_imgs_original, Imgs_to_test, patch_height, 
 def get_data_testing_overlap(test_imgs_original, test_groudTruth, patch_height, patch_width,
                              stride_height, stride_width):
     ### test
-    test_imgs_original = load_hdf5(test_imgs_original)
-    test_masks = load_hdf5(test_groudTruth)
+    test_imgs_original = read_pickle(test_imgs_original)
+    test_masks = read_pickle(test_groudTruth)
 
     test_imgs = my_PreProc(test_imgs_original)
     test_masks = test_masks / 255.
@@ -159,8 +167,8 @@ def get_data_training(train_imgs_original,
                       N_subimgs,
                       inside_FOV,
                       fcn=True):
-    train_imgs_original = load_hdf5(train_imgs_original)
-    train_masks = load_hdf5(train_groudTruth)  # masks always the same
+    train_imgs_original = read_pickle(train_imgs_original)
+    train_masks = read_pickle(train_groudTruth)  # masks always the same
 
     # visualize(group_images(train_imgs_original[:, :, :, :], 5),
     #           path_experiment + 'imgs_train')
